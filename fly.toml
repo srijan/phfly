@@ -1,0 +1,22 @@
+app = "phc"
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+[env]
+
+[experimental]
+  allowed_public_ports = []
+  auto_rollback = false
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 8080
+
+  [[services.tcp_checks]]
+    grace_period = "1s"
+    interval = "15s"
+    restart_limit = 0
+    timeout = "2s"
