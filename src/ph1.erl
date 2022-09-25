@@ -28,9 +28,9 @@ handle_continue(do_handshake, State = #state{ref = Ref, transport = Transport}) 
     io:format("Client connected: ~p~n", [ClientIP]),
     {noreply, State#state{socket = Socket}}.
 
-handle_info({tcp, Socket, Line}, State = #state{socket = Socket, transport = Transport}) ->
-    io:format("Received ~p bytes~n", [erlang:size(Line)]),
-    SplitData = string:split(Line, <<"\n">>, all),
+handle_info({tcp, Socket, Data}, State = #state{socket = Socket, transport = Transport}) ->
+    io:format("Received ~p bytes~n", [erlang:size(Data)]),
+    SplitData = string:split(Data, <<"\n">>, all),
     lists:foreach(
         fun
             (<<>>) ->

@@ -34,20 +34,12 @@ connected(enter, connected, StateData = #state{ref = Ref, transport = Transport}
     Transport:send(Socket, <<"What shall I call you?\n">>),
     {keep_state, StateData#state{socket = Socket}};
 connected(info, {tcp, Socket, NameIn}, StateData = #state{socket = Socket, transport = Transport}) ->
-    Name = string:trim(NameIn),
-    io:format("Got name: ~p~n", [Name]),
-    case re:run(Name, "^[0-9A-Za-z]+$") of
-        {match, _} ->
-            case catch gproc:add_local_name({user, Name}) of
-                true ->
-                    ok = Transport:setopts(Socket, [{active, once}]),
-                    {next_state, joined, StateData#state{name = Name}};
-                {'EXIT', {badarg, _}} ->
-                    Transport:send(Socket, <<"Name already taken, bye.\n">>),
-                    {stop, normal}
-            end;
-        nomatch ->
-            Transport:send(Socket, <<"Invalid name, bye.\n">>),
+    case validate_and_register_name(NameIn) of
+        {ok, Name} ->
+            ok = Transport:setopts(Socket, [{active, once}]),
+            {next_state, joined, StateData#state{name = Name}};
+        {error, Response} ->
+            Transport:send(Socket, Response),
             {stop, normal}
     end;
 connected(info, {tcp_closed, _Socket}, _StateData) ->
@@ -57,7 +49,11 @@ connected(info, {tcp_error, _, Reason}, _StateData) ->
 
 joined(enter, connected, StateData = #state{socket = Socket, transport = Transport, name = Name}) ->
     gproc:reg({p, l, chat_messages}),
-    %% Magic!
+    %% Magic! This select invocation does three things:
+    %% 1. Matches all {user, _} entries in the registry
+    %% 2. Filters out the current user
+    %% 3. Adds a space to each username, essentially making the final return a
+    %%    space-separated iolist of all other users
     Users = gproc:select([
         {{{n, l, {user, '$1'}}, '_', '_'}, [{'=/=', '$1', Name}], [['$1', <<" ">>]]}
     ]),
@@ -109,3 +105,20 @@ terminate(
     );
 terminate(_Reason, _StateName, _StateData) ->
     ok.
+
+%%
+
+validate_and_register_name(NameIn) ->
+    Name = string:trim(NameIn),
+    io:format("Got name: ~p~n", [Name]),
+    case re:run(Name, "^[0-9A-Za-z]+$") of
+        {match, _} ->
+            case catch gproc:add_local_name({user, Name}) of
+                true ->
+                    {ok, Name};
+                {'EXIT', {badarg, _}} ->
+                    {error, <<"Name already taken, bye.\n">>}
+            end;
+        nomatch ->
+            {error, <<"Invalid name, bye.\n">>}
+    end.
