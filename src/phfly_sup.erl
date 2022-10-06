@@ -23,7 +23,11 @@ init([]) ->
         restart => permanent,
         type => worker
     },
-    ChildSpecs = [PH4],
+    ChildSpecs =
+        case application:get_env(phfly, protocol_mod) of
+            {ok, ph4} -> [PH4];
+            _ -> []
+        end,
     {ok, {SupFlags, ChildSpecs}}.
 
 %% internal functions

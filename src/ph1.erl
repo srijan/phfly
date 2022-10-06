@@ -12,6 +12,8 @@
 -export([
     init/1,
     handle_continue/2,
+    handle_call/3,
+    handle_cast/2,
     handle_info/2
 ]).
 
@@ -31,6 +33,12 @@ handle_continue(do_handshake, State = #state{ref = Ref, transport = Transport}) 
     io:format("Client connected: ~p~n", [ClientIP]),
     {noreply, State#state{socket = Socket}}.
 
+handle_call(_Request, _From, State) ->
+    {reply, ok, State}.
+
+handle_cast(_Msg, State) ->
+    {noreply, State}.
+
 handle_info({tcp, Socket, Data}, State = #state{socket = Socket, transport = Transport}) ->
     io:format("Received ~p bytes~n", [erlang:size(Data)]),
     SplitData = string:split(Data, <<"\n">>, all),
@@ -46,7 +54,7 @@ handle_info({tcp, Socket, Data}, State = #state{socket = Socket, transport = Tra
     ),
     Transport:setopts(Socket, [{active, once}]),
     {noreply, State};
-handle_info({tcp_closed, Socket}, State = #state{socket = Socket, transport = Transport}) ->
+handle_info({tcp_closed, Socket}, State = #state{socket = Socket}) ->
     io:format("TCP Close~n"),
     {stop, normal, State};
 handle_info({tcp_error, _, Reason}, State) ->
