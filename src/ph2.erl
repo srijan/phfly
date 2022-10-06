@@ -1,3 +1,6 @@
+%% Fixed-size binary protocol to insert and query timestamped prices
+%% https://protohackers.com/problem/2
+
 -module(ph2).
 -behaviour(ranch_protocol).
 

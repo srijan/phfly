@@ -1,3 +1,6 @@
+%% Testing for prime numbers using a line based protocol with json requests and responses
+%% https://protohackers.com/problem/1
+
 -module(ph1).
 -behaviour(ranch_protocol).
 -behaviour(gen_server).

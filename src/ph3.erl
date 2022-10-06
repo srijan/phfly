@@ -1,3 +1,6 @@
+%% Simple TCP line-based multi-user chatroom with nicks and presense
+%% https://protohackers.com/problem/3
+
 -module(ph3).
 -behaviour(ranch_protocol).
 -behaviour(gen_statem).

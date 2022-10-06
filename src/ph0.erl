@@ -1,3 +1,6 @@
+%% TCP Echo Service
+%% https://protohackers.com/problem/0
+
 -module(ph0).
 -behaviour(ranch_protocol).
 
