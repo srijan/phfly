@@ -17,7 +17,13 @@ init([]) ->
         intensity => 0,
         period => 1
     },
-    ChildSpecs = [],
+    PH4 = #{
+        id => ph4,
+        start => {ph4, start_link, []},
+        restart => permanent,
+        type => worker
+    },
+    ChildSpecs = [PH4],
     {ok, {SupFlags, ChildSpecs}}.
 
 %% internal functions
